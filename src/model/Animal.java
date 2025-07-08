@@ -1,22 +1,22 @@
 package model;
 
 import map.Cell;
-import util.Constants;
 import java.util.concurrent.ThreadLocalRandom;
 import map.Island;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
 
 public abstract class Animal {
 
-    protected int weight;
+    protected double weight;
     protected int maxCountInCell;
     protected int speed;
     protected double foodNeed;
     protected Cell currentCell;
     private double hunger = 0;
 
-    public Animal(int weight, int maxCountInCell, int speed, double foodNeed, Cell cell) {
+    public Animal(double weight, int maxCountInCell, int speed, double foodNeed, Cell cell) {
         this.weight = weight;
         this.maxCountInCell = maxCountInCell;
         this.speed = speed;
@@ -24,20 +24,16 @@ public abstract class Animal {
         this.currentCell = cell;
     }
 
-    public void eat() {
-        Map<String, Object> animalData = Constants.ANIMALS.get(this.getClass().getSimpleName());
-        if (animalData == null) return;
 
-        Map<String, Integer> eats = (Map<String, Integer>) animalData.get("eats");
-        double foodNeed = (double) animalData.get("foodNeed");
+    public void eat() {
+        Map<String, Integer> eats = this.getEats();
+        double foodNeed = this.getFoodNeed();
 
         double currentSaturation = 0;
-
         Cell cell = getCurrentCell();
 
-        // Перебираємо всі можливі види їжі
         for (String foodName : eats.keySet()) {
-            if (currentSaturation >= foodNeed) break;  // якщо наситився - вихід
+            if (currentSaturation >= foodNeed) break;
 
             int chance = eats.get(foodName);
 
@@ -69,7 +65,6 @@ public abstract class Animal {
                                     cell.getX(), cell.getY(),
                                     prey.getClass().getSimpleName());
 
-
                             animalIterator.remove();
                             cell.removeAnimal(prey);
                         }
@@ -78,23 +73,46 @@ public abstract class Animal {
             }
         }
 
-        // Логіка голоду і смерті
         if (currentSaturation >= foodNeed) {
-            hunger = 0;  // ситий
+            hunger = 0;
         } else {
-            hunger += (foodNeed - currentSaturation); // накопичуємо голод
+            hunger += (foodNeed - currentSaturation);
             if (hunger > foodNeed * 3) {
-                // тварина помирає
                 cell.removeAnimal(this);
-                // тут можна додати додаткову логіку смерті, якщо треба
             }
         }
     }
 
+    public void multiply() {
+        List<Animal> sameSpecies = currentCell.getAnimals().stream()
+                .filter(a -> a.getClass() == this.getClass())
+                .toList();
 
-    public void multiply(){
+        if (sameSpecies.size() < 2) {
+            return;
+        }
 
+        long countInCell = sameSpecies.size();
+        if (countInCell >= this.maxCountInCell) {
+            return;
+        }
+
+        try {
+            Animal newAnimal = this.getClass()
+                    .getConstructor(Cell.class)
+                    .newInstance(currentCell);
+
+            currentCell.addAnimal(newAnimal);
+
+            System.out.printf("%s у клітинці (%d, %d) розмножився%n",
+                    this.getClass().getSimpleName(),
+                    currentCell.getX(), currentCell.getY());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 
     public void move(Island island) {
         int maxStep = this.speed;
@@ -102,7 +120,7 @@ public abstract class Animal {
         int currentX = currentCell.getX();
         int currentY = currentCell.getY();
 
-        for (int attempt = 0; attempt < 5; attempt++) { // 5 спроб знайти валідну клітинку
+        for (int attempt = 0; attempt < 5; attempt++) {
             int dx = 0, dy = 0;
             int direction = ThreadLocalRandom.current().nextInt(4);
             int step = ThreadLocalRandom.current().nextInt(1, maxStep + 1);
@@ -125,17 +143,17 @@ public abstract class Animal {
                 this.currentCell = newCell;
                 System.out.printf("%s перемістився з (%d, %d) у (%d, %d)%n",
                         this.getClass().getSimpleName(), currentX, currentY, newX, newY);
-                return; // успішне переміщення, вихід з методу
+                return;
             }
         }
 
-        // Якщо не знайшли куди рухатись — тварина залишається на місці
         System.out.printf("%s залишився на місці (%d, %d)%n",
                 this.getClass().getSimpleName(), currentX, currentY);
     }
 
+    public abstract Map<String, Integer> getEats();
 
-    public int getWeight() {
+    public double getWeight() {
         return weight;
     }
 
