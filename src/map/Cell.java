@@ -18,23 +18,19 @@ public class Cell {
         this.y = y;
     }
 
-    // Додати тварину
-    public void addAnimal(Animal animal) {
+    public synchronized void addAnimal(Animal animal) {
         animals.add(animal);
     }
 
-    // Видалити тварину
-    public void removeAnimal(Animal animal) {
+    public synchronized void removeAnimal(Animal animal) {
         animals.remove(animal);
     }
 
-    // Додати рослину
-    public void addPlant(Plant plant) {
+    public synchronized void addPlant(Plant plant) {
         plants.add(plant);
     }
 
-    // Видалити рослину
-    public void removePlant(Plant plant) {
+    public synchronized void removePlant(Plant plant) {
         plants.remove(plant);
     }
 
