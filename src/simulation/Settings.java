@@ -14,7 +14,7 @@ public class Settings {
     private static final Map<Class<? extends Animal>, Integer> animalSpawnChances = new LinkedHashMap<>();
 
     static {
-        animalSpawnChances.put(Wolf.class, 5);
+        animalSpawnChances.put(Wolf.class, 8);
         animalSpawnChances.put(Bear.class, 3);
         animalSpawnChances.put(Fox.class, 5);
         animalSpawnChances.put(Eagle.class, 4);
@@ -22,7 +22,7 @@ public class Settings {
 
         animalSpawnChances.put(Horse.class, 8);
         animalSpawnChances.put(Deer.class, 10);
-        animalSpawnChances.put(Rabbit.class, 15);
+        animalSpawnChances.put(Rabbit.class, 12);
         animalSpawnChances.put(Mouse.class, 10);
         animalSpawnChances.put(Goat.class, 10);
         animalSpawnChances.put(Sheep.class, 10);
@@ -37,7 +37,7 @@ public class Settings {
     }
 
     public int getPlantSpawnMin() {
-        return 1;
+        return 50;
     }
 
     public int getPlantSpawnMax() {
