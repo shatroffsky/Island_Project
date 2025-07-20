@@ -1,11 +1,10 @@
 package model;
 
 import map.Cell;
-import java.util.concurrent.ThreadLocalRandom;
 import map.Island;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.List;
+
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Animal {
 
@@ -24,6 +23,13 @@ public abstract class Animal {
         this.currentCell = cell;
     }
 
+    public void act(Island island) {
+        synchronized (this) {
+            eat();
+            multiply();
+            move(island);
+        }
+    }
 
     public void eat() {
         Map<String, Integer> eats = this.getEats();
@@ -34,39 +40,31 @@ public abstract class Animal {
 
         for (String foodName : eats.keySet()) {
             if (currentSaturation >= foodNeed) break;
-
             int chance = eats.get(foodName);
 
             if ("Plant".equals(foodName)) {
-                Iterator<Plant> plantIterator = cell.getPlants().iterator();
-                while (plantIterator.hasNext() && currentSaturation < foodNeed) {
-                    Plant plant = plantIterator.next();
-                    if (ThreadLocalRandom.current().nextDouble(100) <= chance) {
-                        currentSaturation += plant.getWeight();
-
-                        System.out.printf("%s у клітинці (%d, %d) зʼїв рослину%n",
-                                this.getClass().getSimpleName(),
-                                cell.getX(), cell.getY());
-
-                        plantIterator.remove();
-                        cell.removePlant(plant);
+                synchronized (cell) {
+                    Iterator<Plant> plantIterator = cell.getPlants().iterator();
+                    while (plantIterator.hasNext() && currentSaturation < foodNeed) {
+                        Plant plant = plantIterator.next();
+                        if (ThreadLocalRandom.current().nextDouble(100) <= chance) {
+                            currentSaturation += plant.getWeight();
+                            plantIterator.remove();
+                            cell.removePlant(plant);
+                        }
                     }
                 }
             } else {
-                Iterator<Animal> animalIterator = cell.getAnimals().iterator();
-                while (animalIterator.hasNext() && currentSaturation < foodNeed) {
-                    Animal prey = animalIterator.next();
-                    if (prey.getClass().getSimpleName().equals(foodName)) {
-                        if (Math.random() * 100 <= chance) {
-                            currentSaturation += prey.getWeight();
-
-                            System.out.printf("%s у клітинці (%d, %d) зʼїв %s%n",
-                                    this.getClass().getSimpleName(),
-                                    cell.getX(), cell.getY(),
-                                    prey.getClass().getSimpleName());
-
-                            animalIterator.remove();
-                            cell.removeAnimal(prey);
+                synchronized (cell) {
+                    Iterator<Animal> animalIterator = cell.getAnimals().iterator();
+                    while (animalIterator.hasNext() && currentSaturation < foodNeed) {
+                        Animal prey = animalIterator.next();
+                        if (prey.getClass().getSimpleName().equals(foodName)) {
+                            if (ThreadLocalRandom.current().nextDouble(100) <= chance) {
+                                currentSaturation += prey.getWeight();
+                                animalIterator.remove();
+                                cell.removeAnimal(prey);
+                            }
                         }
                     }
                 }
@@ -78,45 +76,40 @@ public abstract class Animal {
         } else {
             hunger += (foodNeed - currentSaturation);
             if (hunger > foodNeed * 3) {
-                cell.removeAnimal(this);
+                synchronized (cell) {
+                    cell.removeAnimal(this);
+                }
             }
         }
     }
 
+
     public void multiply() {
-        List<Animal> sameSpecies = currentCell.getAnimals().stream()
-                .filter(a -> a.getClass() == this.getClass())
-                .toList();
+        List<Animal> sameSpecies;
+        synchronized (currentCell) {
+            sameSpecies = currentCell.getAnimals().stream()
+                    .filter(a -> a.getClass() == this.getClass())
+                    .toList();
 
-        if (sameSpecies.size() < 2) {
-            return;
-        }
+            if (sameSpecies.size() >= this.maxCountInCell || ThreadLocalRandom.current().nextDouble() > 0.25 || sameSpecies.size() < 2) {
+                return;
+            }
 
-        long countInCell = sameSpecies.size();
-        if (countInCell >= this.maxCountInCell) {
-            return;
-        }
+            try {
+                Animal newAnimal = this.getClass()
+                        .getConstructor(Cell.class)
+                        .newInstance(currentCell);
 
-        try {
-            Animal newAnimal = this.getClass()
-                    .getConstructor(Cell.class)
-                    .newInstance(currentCell);
-
-            currentCell.addAnimal(newAnimal);
-
-            System.out.printf("%s у клітинці (%d, %d) розмножився%n",
-                    this.getClass().getSimpleName(),
-                    currentCell.getX(), currentCell.getY());
-
-        } catch (Exception e) {
-            e.printStackTrace();
+                currentCell.addAnimal(newAnimal);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
 
     public void move(Island island) {
         int maxStep = this.speed;
-
         int currentX = currentCell.getX();
         int currentY = currentCell.getY();
 
@@ -138,18 +131,18 @@ public abstract class Animal {
             Cell newCell = island.getCell(newX, newY);
 
             if (newCell != null) {
-                currentCell.removeAnimal(this);
-                newCell.addAnimal(this);
+                synchronized (currentCell) {
+                    currentCell.removeAnimal(this);
+                }
+                synchronized (newCell) {
+                    newCell.addAnimal(this);
+                }
                 this.currentCell = newCell;
-                System.out.printf("%s перемістився з (%d, %d) у (%d, %d)%n",
-                        this.getClass().getSimpleName(), currentX, currentY, newX, newY);
                 return;
             }
         }
-
-        System.out.printf("%s залишився на місці (%d, %d)%n",
-                this.getClass().getSimpleName(), currentX, currentY);
     }
+
 
     public abstract Map<String, Integer> getEats();
 
