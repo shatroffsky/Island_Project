@@ -23,14 +23,6 @@ public abstract class Animal {
         this.currentCell = cell;
     }
 
-    public void act(Island island) {
-        synchronized (this) {
-            eat();
-            multiply();
-            move(island);
-        }
-    }
-
     public void eat() {
         Map<String, Integer> eats = this.getEats();
         double foodNeed = this.getFoodNeed();
@@ -154,10 +146,6 @@ public abstract class Animal {
         return maxCountInCell;
     }
 
-    public int getSpeed() {
-        return speed;
-    }
-
     public double getFoodNeed() {
         return foodNeed;
     }
@@ -166,7 +154,4 @@ public abstract class Animal {
         return currentCell;
     }
 
-    public double getHunger() {
-        return hunger;
-    }
 }

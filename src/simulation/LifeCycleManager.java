@@ -9,23 +9,20 @@ import java.util.concurrent.*;
 
 public class LifeCycleManager {
 
-    private final Simulation simulation;
     private final Island island;
     private final ExecutorService executor;
     private final ScheduledExecutorService scheduler;
     private final Settings settings = new Settings();
 
-    private final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
-    private final int CYCLE_INTERVAL_SECONDS = 2;
-
     public LifeCycleManager(Simulation simulation) {
-        this.simulation = simulation;
         this.island = simulation.getIsland();
+        int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
         this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
     }
 
     public void start() {
+        int CYCLE_INTERVAL_SECONDS = 2;
         scheduler.scheduleAtFixedRate(this::runCycle, 0, CYCLE_INTERVAL_SECONDS, TimeUnit.SECONDS);
     }
 

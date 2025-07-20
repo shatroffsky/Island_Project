@@ -34,7 +34,7 @@ public class StatisticsManager {
         System.out.println("🐾 Тварини:");
 
         animalCountMap.entrySet().stream()
-                .sorted(Map.Entry.<String, Integer>comparingByKey())
+                .sorted(Map.Entry.comparingByKey())
                 .forEach(entry ->
                         System.out.printf("  %-12s: %d%n", entry.getKey(), entry.getValue()));
 
