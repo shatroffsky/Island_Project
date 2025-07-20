@@ -59,4 +59,19 @@ public class Simulation {
     public Island getIsland() {
         return island;
     }
+
+    public void start() {
+        LifeCycleManager manager = new LifeCycleManager(this);
+        manager.start();
+
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            manager.shutdown();
+            System.out.println("Симуляція завершена (перервана)");
+        }
+    }
+
+
 }
