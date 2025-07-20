@@ -18,8 +18,6 @@ public class Caterpillar extends Animal {
     }
 
     public void move(Island island) {
-        System.out.printf("%s не рухається у клітинці (%d, %d)%n",
-                this.getClass().getSimpleName(), currentCell.getX(), currentCell.getY());
     }
 
 }
