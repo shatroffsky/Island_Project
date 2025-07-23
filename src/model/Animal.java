@@ -8,6 +8,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Animal {
 
+    private static final String PLANT = "Plant";
+    private static final int MAX_MOVE_ATTEMPTS = 5;
+
     protected double weight;
     protected int maxCountInCell;
     protected int speed;
@@ -31,10 +34,12 @@ public abstract class Animal {
         Cell cell = getCurrentCell();
 
         for (String foodName : eats.keySet()) {
-            if (currentSaturation >= foodNeed) break;
+            if (currentSaturation >= foodNeed) {
+                break;
+            }
             int chance = eats.get(foodName);
 
-            if ("Plant".equals(foodName)) {
+            if (PLANT.equals(foodName)) {
                 synchronized (cell) {
                     Iterator<Plant> plantIterator = cell.getPlants().iterator();
                     while (plantIterator.hasNext() && currentSaturation < foodNeed) {
@@ -105,7 +110,7 @@ public abstract class Animal {
         int currentX = currentCell.getX();
         int currentY = currentCell.getY();
 
-        for (int attempt = 0; attempt < 5; attempt++) {
+        for (int attempt = 0; attempt < MAX_MOVE_ATTEMPTS; attempt++) {
             int dx = 0, dy = 0;
             int direction = ThreadLocalRandom.current().nextInt(4);
             int step = ThreadLocalRandom.current().nextInt(1, maxStep + 1);
