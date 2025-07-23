@@ -44,7 +44,7 @@ public class LifeCycleManager {
             new StatisticsManager().printStatistics(island);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println("Цикл був перерваний: " + e.getMessage());
+            System.err.println("Interrupt cycle: " + e.getMessage());
         }
     }
 
