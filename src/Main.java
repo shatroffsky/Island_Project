@@ -1,5 +1,9 @@
+import simulation.Simulation;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+        new Simulation(10, 10).start();
     }
 }
+
+
